@@ -1,0 +1,79 @@
+#version 330 core
+
+in vec3 aPos;
+in vec3 aNormal;
+in vec2 aTexCoord;
+
+out vec4 fragColor;
+
+uniform vec3 viewPos;
+uniform sampler2D first_texture;
+uniform sampler2D second_texture;
+
+struct Light {
+  vec3 position;
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+};
+
+uniform Light light;
+
+
+struct LampLight {
+  vec3 position;
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+};
+
+uniform LampLight lampLight;
+
+struct Material {
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+  float shininess;
+};
+
+uniform Material material;
+
+void main() {
+  // ambient
+  //vec3 ambient = light.ambient * vec3(texture(first_texture, aTexCoord));
+
+  vec3 ambientMain = light.ambient * vec3(texture(first_texture, aTexCoord));
+  vec3 ambientLamp = lampLight.ambient * vec3(texture(first_texture, aTexCoord));
+
+  // diffuse
+  vec3 norm = normalize(aNormal);
+  //vec3 lightDir = normalize(light.position - aPos);
+
+  vec3 lightDirMain = normalize(light.position - aPos);
+  float diffMain = max(dot(norm, lightDirMain), 0.0);
+  vec3 diffuseMain = light.diffuse * diffMain * vec3(texture(first_texture, aTexCoord));
+
+  vec3 lightDirLamp = normalize(lampLight.position - aPos);
+  float diffLamp = max(dot(norm, lightDirLamp), 0.0);
+  vec3 diffuseLamp = lampLight.diffuse * diffLamp * vec3(texture(first_texture, aTexCoord));
+
+  //vec3 diffuse = light.diffuse * diff * vec3(texture(first_texture, aTexCoord));
+
+  // specular
+  vec3 viewDir = normalize(viewPos - aPos);
+
+  vec3 reflectDirMain = reflect(-lightDirMain, norm);
+  float specMain = pow(max(dot(viewDir, reflectDirMain), 0.0), material.shininess);
+  vec3 specularMain = light.specular * specMain * vec3(texture(second_texture, aTexCoord));
+
+  vec3 reflectDirLamp = reflect(-lightDirLamp, norm);
+  float specLamp = pow(max(dot(viewDir, reflectDirLamp), 0.0), material.shininess);
+  vec3 specularLamp = lampLight.specular * specLamp * vec3(texture(second_texture, aTexCoord));
+
+  vec3 resultMain = ambientMain + (diffuseMain*0.001f) + specularMain;
+  vec3 resultLamp = ambientLamp + diffuseLamp + specularLamp;
+
+  vec3 result = resultMain + resultLamp;
+
+  fragColor = vec4(result, 1.0);
+}

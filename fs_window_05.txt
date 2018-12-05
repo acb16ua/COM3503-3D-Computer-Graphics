@@ -1,0 +1,36 @@
+#version 330 core
+
+in vec3 aPos;
+in vec3 aNormal;
+in vec2 aTexCoord;
+in vec2 movingTexCoord;
+
+out vec4 fragColor;
+
+uniform sampler2D first_texture;
+uniform sampler2D second_texture;
+uniform vec3 viewPos;
+
+struct Light {
+  vec3 position;
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+};
+
+uniform Light light;
+
+struct Material {
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+  float shininess;
+};
+
+uniform Material material;
+
+void main() {
+fragColor = vec4(mix(texture(first_texture, movingTexCoord),
+                     texture(second_texture, aTexCoord),
+                        0.7f).rgb, 1.0f);
+}
